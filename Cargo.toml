@@ -1,0 +1,16 @@
+[package]
+name = "crown_dtl"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Motor Rust de redenciones priorizadas para vaults Crown DTL."
+
+[dependencies]
+
+[lib]
+name = "crown_dtl"
+path = "src/lib.rs"
+
+[[bin]]
+name = "crown-dtl"
+path = "src/main.rs"

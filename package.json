@@ -1,0 +1,15 @@
+{
+  "name": "crown-dtl",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Tests JavaScript para el motor de redenciones priorizadas Crown DTL.",
+  "scripts": {
+    "test": "node --test tests/node/*.test.js",
+    "test:rust": "cargo test --locked",
+    "test:all": "cargo fmt --all -- --check && cargo build --all-targets --locked && cargo test --locked && cargo clippy --all-targets --all-features --locked -- -D warnings && node --test tests/node/*.test.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
