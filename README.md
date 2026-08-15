@@ -1,68 +1,80 @@
-# Crown DTL
+# CrownDTL
 
-![banner](./assets/banner.png)
+![CrownDTL](./assets/banner.png)
 
-Crown DTL es un motor Rust para redenciones priorizadas de vaults DTL. Modela
-colas VIP, colas estandar, ventanas de unlock, limites diarios por usuario,
-capacidad de prioridad por epoch y liquidacion de withdrawals contra reservas
-del vault.
+CrownDTL es un motor determinista de redenciones para tesorerías tokenizadas. Coordina cuentas por nivel de servicio, bóvedas con reservas segregadas, dos carriles de salida, ventanas de desbloqueo y liquidación íntegra. El núcleo Rust conserva importes como enteros comprobados; el cliente JavaScript replica los cálculos de capital con `BigInt` y transporta órdenes idempotentes.
 
-El protocolo esta organizado como un nucleo de libreria con un binario de
-escenarios deterministas. Los tests JavaScript consumen esos escenarios para
-validar el contrato observable del sistema sin depender de servicios externos.
+La versión `1.0.0` fija el contrato operativo, el modelo de capital y el proceso de promoción entre `main`, `production` y el artefacto publicado.
+
+## Vista del sistema
+
+```mermaid
+flowchart LR
+    O["Operador institucional"] --> C["Crown Client"]
+    C --> E["CrownEngine"]
+    E --> P["Políticas y límites"]
+    E --> Q["Colas por carril"]
+    E --> V["Bóvedas segregadas"]
+    Q --> K["Libro de derechos"]
+    V --> R["Reservas"]
+    E --> J["Journal y reportes"]
+    G["Consejo de gobierno"] --> E
+```
+
+```mermaid
+stateDiagram-v2
+    [*] --> Queued: solicitud aceptada
+    Queued --> PendingUnlock: procesado
+    Queued --> Cancelled: cancelación autorizada
+    PendingUnlock --> Withdrawn: ventana madura
+    Cancelled --> [*]
+    Withdrawn --> [*]
+```
+
+## Propiedades económicas
+
+- Contabilidad entera sin coma flotante para shares, reservas, límites y capacidad.
+- Redondeo conservador: haircuts a la baja; shocks y buffers al alza.
+- Priorización estable por carril, nivel de cuenta y secuencia de llegada.
+- Límite diario por cuenta, bóveda y día de epoch.
+- Capacidad prioritaria por bóveda y día, independiente del límite individual.
+- Reporte de cobertura, liquidez, concentración HHI y utilización prioritaria.
+- Operaciones administrativas con quorum, timelock, caducidad y predecesores.
+
+Para una bóveda `v`, CrownDTL evalúa:
+
+```text
+reserva_efectiva = floor(reserva × (10 000 − haircut_bps) / 10 000)
+claims_estresados = ceil(claims × (10 000 + shock_bps) / 10 000)
+buffer_operativo = ceil(shares × buffer_bps / 10 000)
+reserva_requerida = claims_estresados + buffer_operativo
+```
+
+Una ruta es conforme cuando la reserva efectiva y los activos líquidos cubren la reserva requerida. [El modelo económico](./docs/modelo-economico.md) documenta los supuestos y ejemplos completos.
 
 ## Componentes
 
-- `accounts`: cuentas, tiers y portfolios de shares/assets.
-- `amount`: importes enteros y operaciones aritmeticas comprobadas.
-- `asset`: metadata y registro de activos.
-- `clock`: dias de epoch y ventanas de unlock.
-- `policy`: limites diarios, capacidad prioritaria y politicas de ticket.
-- `queue`: ordenacion de cola por lane, tier y secuencia.
-- `priority`: libro de claims economicos pendientes de unlock.
-- `vault`: estado de reservas, shares y tickets de redencion.
-- `engine`: orquestacion transaccional de request, cancel, process y withdraw.
-- `runtime`: escenarios CLI usados por la suite JavaScript.
-- `calibration`: catalogo operativo de perfiles de capacidad por ventana.
+| Superficie | Responsabilidad |
+| --- | --- |
+| `src/engine.rs` | Orquestación transaccional de solicitudes, cola y liquidación |
+| `src/capital.rs` | Métricas por bóveda y agregación de cartera |
+| `src/governance.rs` | Identidad canónica, quorum, timelock y ejecución |
+| `src/policy.rs` | Límites diarios y capacidad prioritaria |
+| `src/priority.rs` | Derechos económicos y madurez temporal |
+| `src/vault.rs` | Reservas, shares y ciclo de tickets |
+| `src/reports.rs` | Vistas deterministas para operación y conciliación |
+| `sdk/crownClient.js` | Transporte HTTPS, idempotencia y paridad matemática |
 
-## Flujo de redencion
+## Inicio rápido
 
-1. Un usuario con shares solicita una redencion estandar o prioritaria.
-2. El motor valida limites diarios, elegibilidad de lane y capacidad disponible.
-3. Las shares quedan debitadas y el ticket entra en la cola del vault.
-4. El procesador del vault agenda tickets por prioridad economica.
-5. Tras la ventana de unlock, el usuario retira assets contra el claim maduro.
-6. El journal registra eventos e invariantes de conservacion de shares y
-   cobertura de claims.
-
-## Requisitos
-
-- Rust estable con `cargo`, `rustfmt` y `clippy`.
-- Node.js 20 o superior para los tests JavaScript.
-
-No hay dependencias Rust externas ni paquetes npm obligatorios.
-
-## Comandos
-
-Ejecutar tests Rust:
+Requisitos: Rust estable con `rustfmt` y `clippy`, y Node.js 20 o superior.
 
 ```bash
-cargo test --locked
+npm ci
+npm run ci
 ```
 
-Ejecutar tests JavaScript:
-
-```bash
-node --test tests/node/*.test.js
-```
-
-Ejecutar la validacion completa:
-
-```bash
-bash scripts/ci.sh
-```
-
-Ejecutar escenarios manuales:
+Ejecutar escenarios observables:
 
 ```bash
 cargo run --quiet -- scenario order
@@ -71,24 +83,39 @@ cargo run --quiet -- scenario cancel
 cargo run --quiet -- scenario withdrawals
 ```
 
-## Estructura
+Consumir el cálculo de capital:
 
-```text
-src/                 Nucleo Rust del protocolo
-tests/redemption_flow.rs
-tests/node/          Tests JavaScript de escenarios
-tests/helpers/       Helpers de ejecucion CLI
-scripts/             Tests y CI local
-.github/             Workflow CI y Dependabot
-.vscode/             Tareas y configuracion de editor
+```js
+import { evaluateCapital } from "./sdk/crownClient.js";
+
+const metrics = evaluateCapital({
+  vault: "vault:senior",
+  reserveAssets: 1_000_000n,
+  liquidAssets: 800_000n,
+  totalShares: 900_000n,
+  openClaims: 300_000n,
+  priorityCapacity: 500_000n,
+  reserveHaircutBps: 500n,
+  claimShockBps: 2_000n,
+  operationalBufferBps: 800n,
+});
 ```
 
-## CI
+## Documentación
 
-La pipeline ejecuta formato, build, tests Rust, clippy y tests JavaScript. Los
-scripts locales usan rutas relativas y no requieren servicios externos.
+- [Arquitectura](./docs/arquitectura.md)
+- [Modelo económico](./docs/modelo-economico.md)
+- [Ciclo de redención](./docs/ciclo-redencion.md)
+- [Integración](./docs/integracion.md)
+- [Operaciones](./docs/operaciones.md)
+- [Observabilidad](./docs/observabilidad.md)
+- [Gobernanza](./docs/gobernanza.md)
+- [Política de seguridad](./SECURITY.md)
 
-## Estado
+## Calidad y promoción
 
-Repositorio preparado como laboratorio de auditoria de logica economica para
-redenciones DTL priorizadas.
+`npm run ci` comprueba formato, compilación, Clippy estricto, pruebas Rust y Node, inventario documental, identidad del banner, profundidad del código y auditoría de dependencias. CI ejecuta la misma secuencia en Linux y Windows. Una publicación válida mantiene el mismo commit en `main`, `production`, el tag anotado `v1.0.0` y la release `Production 1.0.0`.
+
+## Licencia
+
+[MIT](./LICENSE).

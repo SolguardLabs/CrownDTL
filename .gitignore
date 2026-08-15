@@ -1,5 +1,6 @@
 /target/
 /node_modules/
+/tests/crown_cancelled_priority_claim_proof.rs
 /dist/
 /coverage/
 npm-debug.log*
@@ -7,4 +8,3 @@ yarn-debug.log*
 yarn-error.log*
 .env
 .env.*
-vulnerability.md
