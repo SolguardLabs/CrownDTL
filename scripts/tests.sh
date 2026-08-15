@@ -38,4 +38,4 @@ run_node() {
 }
 
 run_cargo test --locked
-run_node --test tests/node/*.test.js
+run_node --test tests/node/*.test.js tests/sdk/*.test.js tests/repository/*.test.js

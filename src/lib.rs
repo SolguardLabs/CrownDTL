@@ -2,10 +2,12 @@ pub mod accounts;
 pub mod amount;
 pub mod asset;
 pub mod calibration;
+pub mod capital;
 pub mod clock;
 pub mod engine;
 pub mod error;
 pub mod events;
+pub mod governance;
 pub mod ids;
 pub mod ledger;
 pub mod policy;
@@ -18,9 +20,13 @@ pub mod vault;
 pub use accounts::{Account, AccountRegistry, AccountTier, Portfolio};
 pub use amount::{Amount, BasisPoints, Rate};
 pub use asset::{AssetMetadata, AssetRegistry};
+pub use capital::{
+    evaluate_portfolio, evaluate_route, CapitalInput, CapitalMetrics, PortfolioMetrics,
+};
 pub use clock::{Clock, EpochDay, UnlockWindow, WindowKind, WindowSpec};
 pub use engine::{CrownEngine, EngineConfig, RequestReceipt, WithdrawalReceipt};
 pub use error::{CrownError, CrownResult};
+pub use governance::{payload_hash, Council, OperationRecord, OperationSpec, OperationStatus};
 pub use ids::{AccountId, AssetId, RedemptionId, VaultId, WindowId};
 pub use policy::{DailyLimitPolicy, PriorityPolicy, RedemptionPolicy};
 pub use queue::{Lane, QueueSnapshot};

@@ -1,72 +1,86 @@
-# Security Policy
+# Política de seguridad
 
-## Modelo de seguridad
+## Versiones mantenidas
 
-Crown DTL asume que las cuentas registradas mantienen portfolios de shares y
-assets dentro del motor local. El vault conserva reservas del activo subyacente,
-emite shares y procesa redenciones mediante tickets con estado explicito.
+| Versión | Estado | Canal |
+| --- | --- | --- |
+| `1.0.x` | Mantenida | `production` |
+| `< 1.0.0` | Fuera de soporte | — |
 
-Las rutas sensibles son:
+El tag de una publicación debe apuntar al mismo commit que `main` y `production`. El workflow `Release integrity` verifica esa cadena en cada promoción.
 
-- solicitud de redencion;
-- consumo de limite diario;
-- admision en cola prioritaria;
-- cancelacion de tickets;
-- procesado de cola;
-- unlock y withdrawal;
-- reconciliacion de shares y claims abiertos.
+## Comunicación responsable
 
-## Invariantes esperadas
+Utiliza **Security → Report a security issue** en GitHub para comunicar de forma privada cualquier comportamiento que afecte a autorización, integridad contable, disponibilidad o confidencialidad. No abras una issue pública con detalles operativos.
 
-- Las shares totales del vault coinciden con las shares agregadas de cuentas.
-- Las redenciones usan importes enteros con aritmetica comprobada.
-- Las colas priorizadas respetan lane, tier y orden de llegada.
-- Los limites diarios se consumen y liberan de forma determinista.
-- La capacidad prioritaria se controla por vault y day.
-- Los withdrawals solo se completan cuando la ventana de unlock esta madura.
-- La reserva del vault debe cubrir los claims abiertos.
+Incluye versión y commit, precondiciones, componente, impacto, evidencia mínima y una propuesta de propiedad que debería preservarse. No incluyas credenciales, claves, datos personales ni material de terceros. El equipo confirmará recepción, clasificará el caso y coordinará la corrección y la divulgación.
 
-## Validaciones automatizadas
+## Fronteras de confianza
 
-La suite local ejecuta:
-
-```bash
-cargo fmt --all -- --check
-cargo build --all-targets --locked
-cargo test --locked
-cargo clippy --all-targets --all-features --locked -- -D warnings
-node --test tests/node/*.test.js
+```mermaid
+flowchart TB
+    subgraph U["Zona de integración"]
+      C["Cliente institucional"]
+    end
+    subgraph A["Zona de aplicación"]
+      API["Adaptador HTTPS"]
+      E["CrownEngine"]
+    end
+    subgraph S["Zona de estado"]
+      V["Bóvedas"]
+      P["Políticas"]
+      J["Journal"]
+    end
+    C -->|"orden idempotente"| API
+    API -->|"entrada normalizada"| E
+    E --> V
+    E --> P
+    E --> J
 ```
 
-Los tests JavaScript cubren orden de cola, limites diarios, cancelaciones y
-withdrawals. Los tests Rust ejercitan flujos de API publica y reconciliacion de
-estado.
+```mermaid
+flowchart LR
+    I["Cambio administrativo"] --> H["Hash canónico"]
+    H --> Q["Aprobaciones de quorum"]
+    Q --> T["Timelock"]
+    T --> X{"Predecesor ejecutado"}
+    X -->|sí| E["Ejecución"]
+    X -->|no| R["Rechazo cerrado"]
+```
 
-## Dependencias
+## Controles obligatorios
 
-El crate no usa dependencias Rust externas. Los tests JavaScript usan modulos
-nativos de Node.js. Dependabot esta configurado para Cargo, npm y GitHub
-Actions para mantener el repositorio alineado con cambios de tooling.
+- Entradas normalizadas, dominios explícitos e identificadores acotados.
+- Operaciones aritméticas comprobadas y redondeo documentado.
+- HTTPS, rechazo de redirecciones e idempotencia para escrituras del cliente.
+- Quorum, timelock, caducidad y relación de predecesores para administración.
+- Conciliación entre reservas, shares, tickets, derechos y journal.
+- Dependencias bloqueadas y auditoría automática en cada cambio.
+- Revisión mediante CODEOWNERS para núcleo, CI y política de seguridad.
 
-## Alcance de revision
+## Matriz de revisión
 
-La revision debe centrarse en:
+| Área | Propiedad | Evidencia automática |
+| --- | --- | --- |
+| Reservas | Cobertura suficiente bajo estrés | pruebas de `capital` |
+| Redenciones | Transiciones válidas y orden estable | pruebas Rust de integración |
+| Cliente | Precisión entera e idempotencia | pruebas Node del SDK |
+| Gobierno | Operaciones únicas, maduras y aprobadas | pruebas de `governance` |
+| Promoción | Referencias en un único commit | workflow de integridad |
 
-- consistencia de accounting entre accounts, claims y vaults;
-- orden temporal entre request, cancel, process y withdraw;
-- integridad de limites por usuario;
-- capacidad disponible por day;
-- estados de ticket y claims durante unlock windows;
-- reportes e invariantes emitidos por el ledger.
+## Respuesta operativa
 
-## Reporte interno
-
-Un reporte debe incluir:
-
-- resumen ejecutivo;
-- impacto economico;
-- precondiciones;
-- ubicacion exacta;
-- secuencia de reproduccion;
-- mitigacion propuesta;
-- tests recomendados.
+```mermaid
+sequenceDiagram
+    participant R as Remitente
+    participant S as Equipo de seguridad
+    participant E as Ingeniería
+    participant O as Operaciones
+    R->>S: Comunicación privada
+    S->>S: Triage y severidad
+    S->>E: Reproducción acotada
+    E->>S: Cambio y pruebas
+    S->>O: Autorización de promoción
+    O->>O: Verificación de referencias
+    S-->>R: Resolución coordinada
+```

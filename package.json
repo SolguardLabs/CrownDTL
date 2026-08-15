@@ -1,13 +1,22 @@
 {
   "name": "crown-dtl",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Tests JavaScript para el motor de redenciones priorizadas Crown DTL.",
+  "description": "Cliente y validación operativa para el motor de redenciones CrownDTL.",
   "scripts": {
-    "test": "node --test tests/node/*.test.js",
+    "format:check": "prettier --check . && cargo fmt --all -- --check",
+    "build": "cargo build --all-targets --locked",
+    "check": "cargo clippy --all-targets --all-features --locked -- -D warnings",
     "test:rust": "cargo test --locked",
-    "test:all": "cargo fmt --all -- --check && cargo build --all-targets --locked && cargo test --locked && cargo clippy --all-targets --all-features --locked -- -D warnings && node --test tests/node/*.test.js"
+    "test:node": "node --test tests/node/*.test.js tests/sdk/*.test.js tests/repository/*.test.js",
+    "test": "npm run test:rust && npm run test:node",
+    "verify:repo": "node scripts/verify-repository.mjs",
+    "audit:deps": "npm audit --omit=dev --audit-level=high",
+    "ci": "npm run format:check && npm run build && npm run check && npm test && npm run verify:repo && npm run audit:deps"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
   },
   "engines": {
     "node": ">=20.0.0"

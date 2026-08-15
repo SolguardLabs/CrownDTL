@@ -1,11 +1,12 @@
 [package]
 name = "crown_dtl"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 publish = false
 description = "Motor Rust de redenciones priorizadas para vaults Crown DTL."
 
 [dependencies]
+sha2 = "0.10.9"
 
 [lib]
 name = "crown_dtl"

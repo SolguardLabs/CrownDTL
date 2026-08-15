@@ -37,8 +37,11 @@ run_node() {
   fi
 }
 
-run_cargo fmt --all -- --check
-run_cargo build --all-targets --locked
-run_cargo test --locked
-run_cargo clippy --all-targets --all-features --locked -- -D warnings
-run_node --test tests/node/*.test.js
+if command -v npm >/dev/null 2>&1; then
+  npm run ci
+elif command -v npm.cmd >/dev/null 2>&1; then
+  npm.cmd run ci
+else
+  echo "npm is not available in PATH" >&2
+  exit 127
+fi
