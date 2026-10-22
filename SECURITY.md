@@ -4,7 +4,8 @@
 
 | Versión | Estado | Canal |
 | --- | --- | --- |
-| `1.0.x` | Mantenida | `production` |
+| `2.0.x` | Mantenida | `production` |
+| `1.0.x` | Histórica | tag `v1.0.0` |
 | `< 1.0.0` | Fuera de soporte | — |
 
 El tag de una publicación debe apuntar al mismo commit que `main` y `production`. El workflow `Release integrity` verifica esa cadena en cada promoción.
@@ -55,6 +56,7 @@ flowchart LR
 - HTTPS, rechazo de redirecciones e idempotencia para escrituras del cliente.
 - Quorum, timelock, caducidad y relación de predecesores para administración.
 - Conciliación entre reservas, shares, tickets, derechos y journal.
+- Conciliación de activos pendientes con la suma de tickets activos por bóveda.
 - Dependencias bloqueadas y auditoría automática en cada cambio.
 - Revisión mediante CODEOWNERS para núcleo, CI y política de seguridad.
 

@@ -497,7 +497,8 @@ impl CrownEngine {
             .release(account_id, vault_id, requested_day, shares)?;
         if kind == RedemptionKind::Priority {
             self.capacity.release(vault_id, requested_day, shares)?;
-        } else if self.claims.pending_for_ticket(redemption_id) > Amount::ZERO {
+        }
+        if self.claims.pending_for_ticket(redemption_id) > Amount::ZERO {
             let _ = self.claims.release_claim(redemption_id)?;
         }
         let event = self
@@ -691,6 +692,9 @@ impl CrownEngine {
     pub fn check_invariants(&mut self) -> CrownResult<()> {
         if !self.config.invariant_checks() {
             return Ok(());
+        }
+        for vault in self.vaults.values() {
+            vault.check_ticket_accounting()?;
         }
         let totals = self.collect_totals()?;
         let day = self.day();

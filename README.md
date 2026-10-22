@@ -4,7 +4,7 @@
 
 CrownDTL es un motor determinista de redenciones para tesorerías tokenizadas. Coordina cuentas por nivel de servicio, bóvedas con reservas segregadas, dos carriles de salida, ventanas de desbloqueo y liquidación íntegra. El núcleo Rust conserva importes como enteros comprobados; el cliente JavaScript replica los cálculos de capital con `BigInt` y transporta órdenes idempotentes.
 
-La versión `1.0.0` fija el contrato operativo, el modelo de capital y el proceso de promoción entre `main`, `production` y el artefacto publicado.
+La versión `2.0.0` consolida el contrato operativo, la conciliación del ciclo de redención y el proceso de promoción entre `main`, `production` y el artefacto publicado.
 
 ## Vista del sistema
 
@@ -111,10 +111,11 @@ const metrics = evaluateCapital({
 - [Observabilidad](./docs/observabilidad.md)
 - [Gobernanza](./docs/gobernanza.md)
 - [Política de seguridad](./SECURITY.md)
+- [Historial de versiones](./CHANGELOG.md)
 
 ## Calidad y promoción
 
-`npm run ci` comprueba formato, compilación, Clippy estricto, pruebas Rust y Node, inventario documental, identidad del banner, profundidad del código y auditoría de dependencias. CI ejecuta la misma secuencia en Linux y Windows. Una publicación válida mantiene el mismo commit en `main`, `production`, el tag anotado `v1.0.0` y la release `Production 1.0.0`.
+`npm run ci` comprueba formato, compilación, Clippy estricto, pruebas Rust y Node, inventario documental, identidad del banner, profundidad del código y auditoría de dependencias. CI ejecuta la misma secuencia en Linux y Windows. Una publicación válida mantiene el mismo commit en `main`, `production`, el tag anotado `v2.0.0` y la release `Production 2.0.0`.
 
 ## Licencia
 

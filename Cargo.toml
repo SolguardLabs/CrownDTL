@@ -1,6 +1,6 @@
 [package]
 name = "crown_dtl"
-version = "1.0.0"
+version = "2.0.0"
 edition = "2021"
 publish = false
 description = "Motor Rust de redenciones priorizadas para vaults Crown DTL."

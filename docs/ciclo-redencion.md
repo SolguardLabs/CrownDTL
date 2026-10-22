@@ -57,7 +57,7 @@ stateDiagram-v2
     W --> [*]
 ```
 
-Las transiciones terminales no se reabren. Una cancelación solo es admisible mientras el ticket sea cancelable; una retirada solo se admite tras la madurez declarada. El journal conserva los eventos que explican cada cambio.
+Las transiciones terminales no se reabren. Una cancelación solo es admisible mientras el ticket sea cancelable; devuelve las shares y la capacidad de admisión a sus registros y cierra el derecho asociado al ticket. Una retirada solo se admite tras la madurez declarada. El journal conserva los eventos que explican cada cambio.
 
 ## Conciliación por cierre
 
