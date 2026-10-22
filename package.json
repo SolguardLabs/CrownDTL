@@ -1,6 +1,6 @@
 {
   "name": "crown-dtl",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "description": "Cliente y validación operativa para el motor de redenciones CrownDTL.",

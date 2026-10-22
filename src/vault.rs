@@ -328,6 +328,35 @@ impl VaultState {
         self.reserve_assets.checked_sub(self.pending_assets)
     }
 
+    pub fn check_ticket_accounting(&self) -> CrownResult<()> {
+        let outstanding = Amount::checked_sum(
+            self.tickets
+                .values()
+                .filter(|ticket| {
+                    matches!(
+                        ticket.status(),
+                        RedemptionStatus::Queued | RedemptionStatus::PendingUnlock
+                    )
+                })
+                .map(RedemptionTicket::quoted_assets),
+        )?;
+        if outstanding != self.pending_assets {
+            return Err(CrownError::Invariant(format!(
+                "vault {} pending assets {} differ from active tickets {}",
+                self.id(),
+                self.pending_assets,
+                outstanding
+            )));
+        }
+        if self.pending_assets > self.reserve_assets {
+            return Err(CrownError::Invariant(format!(
+                "vault {} pending assets exceed reserve",
+                self.id()
+            )));
+        }
+        Ok(())
+    }
+
     pub fn ticket(&self, id: RedemptionId) -> CrownResult<&RedemptionTicket> {
         self.tickets
             .get(&id)

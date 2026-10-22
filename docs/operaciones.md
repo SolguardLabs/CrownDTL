@@ -38,9 +38,9 @@ sequenceDiagram
     CI-->>E: main verde
     E->>G: Actualizar production al mismo SHA
     CI-->>E: production verde
-    E->>G: Crear v1.0.0 anotado
+    E->>G: Crear v2.0.0 anotado
     CI-->>E: tag verificado
-    E->>R: Publicar Production 1.0.0
+    E->>R: Publicar Production 2.0.0
     CI-->>E: integridad verificada
 ```
 

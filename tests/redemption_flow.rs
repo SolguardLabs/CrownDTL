@@ -81,4 +81,13 @@ fn priority_capacity_reopens_after_cancellation() {
             .raw(),
         1500
     );
+    assert_eq!(
+        engine.claims().pending_for_ticket(first.redemption_id),
+        Amount::ZERO
+    );
+    engine.advance_days(1).unwrap();
+    assert_eq!(
+        engine.withdraw_available(bob, vault).unwrap().amount,
+        Amount::ZERO
+    );
 }
